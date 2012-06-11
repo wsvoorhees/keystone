@@ -165,6 +165,13 @@ class IdentityService(object):
             return True
         return self._authenticate(validate, user.id, auth_request.tenant_id)
 
+
+    def authenticate_headers(self, username):
+        def validate(duser): 
+            return True
+        userd = self.user_manager.get_by_name(username)
+        return self._authenticate(validate, userd.id)
+
     def authenticate_ec2(self, credentials):
         LOG.debug("Authenticating with EC2 credentials")
         if not isinstance(credentials, auth.Ec2Credentials):

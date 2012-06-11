@@ -104,7 +104,12 @@ def get_normalized_request_content(model, req):
 def detect_credential_type(req):
     """Return the credential type name by detecting them in json/xml body"""
 
-    if req.content_type == "application/xml":
+    logger.debug("Environ for this request is :" + repr(req.environ))
+
+    if  "X_AUTHORIZATION" in req.environ:
+        return "header_authorization"
+
+    elif req.content_type == "application/xml":
         dom = etree.Element("root")
         dom.append(etree.fromstring(req.body))
         root = dom.find("{http://docs.openstack.org/identity/api/v2.0}"

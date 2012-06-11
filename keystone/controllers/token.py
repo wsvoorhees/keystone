@@ -48,7 +48,11 @@ class TokenController(BaseController):
     @utils.wrap_error
     def authenticate(self, req):
         credential_type = utils.detect_credential_type(req)
-        if credential_type == "passwordCredentials":
+        if  credential_type == "header_authorization":
+            proxy, username = req.environ['X_AUTHORIZATION'].split()
+            result = self.identity_service.authenticate_headers(username) #We rely on the user already having been authenticated.
+            return utils.send_result(200, req, result)
+        elif credential_type == "passwordCredentials":
             auth_with_credentials = utils.get_normalized_request_content(
                     auth.AuthWithPasswordCredentials, req)
             result = self.identity_service.authenticate(

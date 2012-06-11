@@ -91,9 +91,14 @@ class AuthProtocol(object):
                 headers["X-Auth-Token"] = auth["token"]["id"]
             if "serviceCatalog" in auth:
                 services = auth["serviceCatalog"]
-                service_mappings = ast.literal_eval(
-                    self.conf.get("service_header_mappings",
-                                  self.conf["service-header-mappings"]))
+                try:
+                    service_mappings = ast.literal_eval(
+                        self.conf.get("service_header_mappings",
+                                      self.conf["service-header-mappings"]))
+                except KeyError:
+                    service_mappings = ast.literal_eval(
+                        self.conf.get("service_header_mappings",
+                                      self.conf["service_header_mappings"]))
                 for service in services:
                     service_name = service["name"]
                     service_urls = ''
