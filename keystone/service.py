@@ -246,7 +246,7 @@ class TokenController(wsgi.Application):
         """
 
         token_id = uuid.uuid4().hex
-        if 'passwordCredentials' in auth:
+        if ('passwordCredentials' in auth) or  context.get('X_AUTHORIZATION', None):
             username = auth['passwordCredentials'].get('username', '')
             password = auth['passwordCredentials'].get('password', '')
             tenant_name = auth.get('tenantName', None)
@@ -267,11 +267,18 @@ class TokenController(wsgi.Application):
                     tenant_id = tenant_ref['id']
 
             try:
-                auth_info = self.identity_api.authenticate(context=context,
-                                                           user_id=user_id,
-                                                           password=password,
-                                                           tenant_id=tenant_id)
-                (user_ref, tenant_ref, metadata_ref) = auth_info
+                # Voorhees We've set context to contain aunthenticated users (when valid)
+                if  context.get('X_AUTHORIZATION', None):
+                     #need token_ref, roles_ref, catalog_ref
+                     proxy, username = context['X_AUTHORIZATION'].split()
+                     (user_ref, tenant_ref, metadata_ref ) = self.identity_api.ldap_authenticate(context=context, username=username, tenant_id=tenant_id)
+
+                else:
+                    (user_ref, tenant_ref, metadata_ref) = \
+                        self.identity_api.authenticate(context=context,
+                                                       user_id=user_id,
+                                                       password=password,
+                                                       tenant_id=tenant_id)
 
                 # If the user is disabled don't allow them to authenticate
                 if not user_ref.get('enabled', True):
@@ -341,6 +348,7 @@ class TokenController(wsgi.Application):
                                             tenant=tenant_ref,
                                             metadata=metadata_ref))
 
+        
         # TODO(termie): optimize this call at some point and put it into the
         #               the return for metadata
         # fill out the roles in the metadata

@@ -134,6 +134,24 @@ class Identity(sql.Base, identity.Driver):
     def db_sync(self):
         migration.db_sync()
 
+    #Voorhees returns all of the metadata from the sql database, without checking against the password (since that has been done already)
+    def ldap_authenticate(self, context=None, username=None, tenant_id=None):
+        user_ref = self.get_user_by_name(username)
+        if not user_ref:
+            raise exception.Forbidden(message='User does not exist.')
+#        import pdb; pdb.set_trace()
+        user_id = user_ref.get('id', None)
+        tenants = self.get_tenants_for_user(user_id)
+        if tenant_id and tenant_id not in tenants:
+            raise AssertionError('Invalid tenant')
+        tenant_ref = self.get_tenant(tenant_id)
+        if tenant_ref:
+            metadata_ref = self.get_metadata(user_id, tenant_id)
+        else:
+            metadata_ref = {}
+            return (_filter_user(user_ref), tenant_ref, metadata_ref)
+
+
     # Identity interface
     def authenticate(self, user_id=None, tenant_id=None, password=None):
         """Authenticate based on a user, tenant and password.

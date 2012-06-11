@@ -233,6 +233,8 @@ def check_password(password, hashed):
     """
     if password is None:
         return False
+    if hashed is None:
+        return False
     password_utf8 = trunc_password(password).encode('utf-8')
     return passlib.hash.sha512_crypt.verify(password_utf8, hashed)
 
